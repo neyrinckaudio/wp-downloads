@@ -31,8 +31,8 @@ class PN_Downloads_CPT {
     public static function register_post_type() {
         register_post_type( 'pn_download', [
             'labels' => [
-                'name'               => 'Downloads',
-                'singular_name'      => 'Download',
+                'name'               => 'PN Downloads',
+                'singular_name'      => 'PN Download',
                 'add_new'            => 'Add New Product',
                 'add_new_item'       => 'Add New Product',
                 'edit_item'          => 'Edit Product',
@@ -41,7 +41,7 @@ class PN_Downloads_CPT {
                 'search_items'       => 'Search Products',
                 'not_found'          => 'No products found',
                 'not_found_in_trash' => 'No products found in Trash',
-                'menu_name'          => 'Downloads',
+                'menu_name'          => 'PN Downloads',
             ],
             'public'       => true,
             'has_archive'  => false,
