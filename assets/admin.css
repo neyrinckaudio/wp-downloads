@@ -1,0 +1,25 @@
+.pn-download-meta h3 {
+    margin-top: 1.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid #ccd0d4;
+}
+
+.pn-legacy-entry {
+    background: #f9f9f9;
+    padding: 0 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e4e7;
+}
+
+.pn-legacy-entry hr {
+    display: none;
+}
+
+#pn-add-legacy {
+    margin-top: 10px;
+}
+
+.pn-remove-legacy {
+    color: #a00 !important;
+    margin-left: 10px !important;
+}
