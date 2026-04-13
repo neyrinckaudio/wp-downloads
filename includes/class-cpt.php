@@ -48,7 +48,7 @@ class PN_Downloads_CPT {
             'show_in_rest' => true,
             'menu_icon'    => 'dashicons-download',
             'supports'     => [ 'title', 'editor', 'thumbnail', 'custom-fields' ],
-            'rewrite'      => [ 'slug' => 'download' ],
+            'rewrite'      => [ 'slug' => 'pn-downloads' ],
         ] );
 
         $meta_fields = [
