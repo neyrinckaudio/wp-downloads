@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PN Downloads
  * Description: Manage product installer downloads with REST API for version updates.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Paul Neyrinck
  * Text Domain: pn-downloads
  */
