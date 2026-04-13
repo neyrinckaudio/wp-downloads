@@ -89,24 +89,24 @@ class PN_Downloads_REST_API {
 
         // Optionally archive current version to legacy.
         if ( ! empty( $body['archive_current'] ) ) {
-            $legacy = get_post_meta( $post->ID, '_pn_dl_legacy', true );
+            $legacy = get_post_meta( $post->ID, 'pn_dl_legacy', true );
             $legacy = is_array( $legacy ) ? $legacy : [];
             $legacy[] = [
-                'mac_version'       => get_post_meta( $post->ID, '_pn_dl_mac_version', true ),
-                'mac_version_exact' => get_post_meta( $post->ID, '_pn_dl_mac_version_exact', true ),
-                'mac_url'           => get_post_meta( $post->ID, '_pn_dl_mac_url', true ),
-                'win_version'       => get_post_meta( $post->ID, '_pn_dl_win_version', true ),
-                'win_version_exact' => get_post_meta( $post->ID, '_pn_dl_win_version_exact', true ),
-                'win_url'           => get_post_meta( $post->ID, '_pn_dl_win_url', true ),
+                'mac_version'       => get_post_meta( $post->ID, 'pn_dl_mac_version', true ),
+                'mac_version_exact' => get_post_meta( $post->ID, 'pn_dl_mac_version_exact', true ),
+                'mac_url'           => get_post_meta( $post->ID, 'pn_dl_mac_url', true ),
+                'win_version'       => get_post_meta( $post->ID, 'pn_dl_win_version', true ),
+                'win_version_exact' => get_post_meta( $post->ID, 'pn_dl_win_version_exact', true ),
+                'win_url'           => get_post_meta( $post->ID, 'pn_dl_win_url', true ),
             ];
-            update_post_meta( $post->ID, '_pn_dl_legacy', $legacy );
+            update_post_meta( $post->ID, 'pn_dl_legacy', $legacy );
         }
 
         $text_fields = [
-            'mac_version'       => '_pn_dl_mac_version',
-            'mac_version_exact' => '_pn_dl_mac_version_exact',
-            'win_version'       => '_pn_dl_win_version',
-            'win_version_exact' => '_pn_dl_win_version_exact',
+            'mac_version'       => 'pn_dl_mac_version',
+            'mac_version_exact' => 'pn_dl_mac_version_exact',
+            'win_version'       => 'pn_dl_win_version',
+            'win_version_exact' => 'pn_dl_win_version_exact',
         ];
         foreach ( $text_fields as $body_key => $meta_key ) {
             if ( isset( $body[ $body_key ] ) ) {
@@ -115,10 +115,10 @@ class PN_Downloads_REST_API {
         }
 
         if ( isset( $body['mac_url'] ) ) {
-            update_post_meta( $post->ID, '_pn_dl_mac_url', esc_url_raw( $body['mac_url'] ) );
+            update_post_meta( $post->ID, 'pn_dl_mac_url', esc_url_raw( $body['mac_url'] ) );
         }
         if ( isset( $body['win_url'] ) ) {
-            update_post_meta( $post->ID, '_pn_dl_win_url', esc_url_raw( $body['win_url'] ) );
+            update_post_meta( $post->ID, 'pn_dl_win_url', esc_url_raw( $body['win_url'] ) );
         }
 
         // Refetch after update.
@@ -138,7 +138,7 @@ class PN_Downloads_REST_API {
         }
 
         $platform = $request['platform'];
-        $meta_key = $platform === 'mac' ? '_pn_dl_mac_url' : '_pn_dl_win_url';
+        $meta_key = $platform === 'mac' ? 'pn_dl_mac_url' : 'pn_dl_win_url';
         $url      = get_post_meta( $post->ID, $meta_key, true );
 
         if ( empty( $url ) ) {
@@ -154,17 +154,17 @@ class PN_Downloads_REST_API {
     }
 
     private static function format_product( $post ) {
-        $legacy = get_post_meta( $post->ID, '_pn_dl_legacy', true );
+        $legacy = get_post_meta( $post->ID, 'pn_dl_legacy', true );
 
         return [
             'slug'    => $post->post_name,
             'name'    => $post->post_title,
-            'mac_version'       => get_post_meta( $post->ID, '_pn_dl_mac_version', true ),
-            'mac_version_exact' => get_post_meta( $post->ID, '_pn_dl_mac_version_exact', true ),
-            'mac_url'           => get_post_meta( $post->ID, '_pn_dl_mac_url', true ),
-            'win_version'       => get_post_meta( $post->ID, '_pn_dl_win_version', true ),
-            'win_version_exact' => get_post_meta( $post->ID, '_pn_dl_win_version_exact', true ),
-            'win_url' => get_post_meta( $post->ID, '_pn_dl_win_url', true ),
+            'mac_version'       => get_post_meta( $post->ID, 'pn_dl_mac_version', true ),
+            'mac_version_exact' => get_post_meta( $post->ID, 'pn_dl_mac_version_exact', true ),
+            'mac_url'           => get_post_meta( $post->ID, 'pn_dl_mac_url', true ),
+            'win_version'       => get_post_meta( $post->ID, 'pn_dl_win_version', true ),
+            'win_version_exact' => get_post_meta( $post->ID, 'pn_dl_win_version_exact', true ),
+            'win_url' => get_post_meta( $post->ID, 'pn_dl_win_url', true ),
             'legacy'  => is_array( $legacy ) ? $legacy : [],
         ];
     }

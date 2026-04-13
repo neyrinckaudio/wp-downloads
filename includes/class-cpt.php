@@ -7,25 +7,92 @@ class PN_Downloads_CPT {
 
     public static function init() {
         add_action( 'init', [ __CLASS__, 'register_post_type' ] );
+        add_action( 'init', [ __CLASS__, 'maybe_migrate_meta_keys' ] );
         add_action( 'add_meta_boxes', [ __CLASS__, 'add_meta_boxes' ] );
         add_action( 'save_post_pn_download', [ __CLASS__, 'save_meta' ], 10, 2 );
         add_filter( 'manage_pn_download_posts_columns', [ __CLASS__, 'admin_columns' ] );
         add_action( 'manage_pn_download_posts_custom_column', [ __CLASS__, 'admin_column_content' ], 10, 2 );
-        add_filter( 'is_protected_meta', [ __CLASS__, 'expose_meta_to_divi' ], 10, 2 );
+        add_filter( 'divi_module_dynamic_content_options', [ __CLASS__, 'relabel_divi_dynamic_fields' ], 20, 3 );
     }
 
     /**
-     * Un-hide custom fields so they appear in Divi 5's Dynamic Content dropdowns.
+     * Replace raw meta-key labels in Divi 5's Dynamic Content "Custom Field" dropdown
+     * with human-readable names. Divi populates the dropdown with the raw meta key as
+     * the label for standard meta; this filter rewrites those entries for our keys.
      */
-    public static function expose_meta_to_divi( $protected, $meta_key ) {
-        $exposed = [
-            '_pn_dl_mac_version', '_pn_dl_mac_version_exact', '_pn_dl_mac_url',
-            '_pn_dl_win_version', '_pn_dl_win_version_exact', '_pn_dl_win_url',
-        ];
-        if ( in_array( $meta_key, $exposed, true ) ) {
-            return false;
+    public static function relabel_divi_dynamic_fields( $options, $post_id, $context ) {
+        $labels = self::meta_field_labels();
+
+        if ( ! isset( $options['post_meta_key']['fields']['select_meta_key']['options'] ) ) {
+            return $options;
         }
-        return $protected;
+
+        $groups = &$options['post_meta_key']['fields']['select_meta_key']['options'];
+
+        foreach ( $groups as $group_key => &$group ) {
+            if ( empty( $group['options'] ) || ! is_array( $group['options'] ) ) {
+                continue;
+            }
+            foreach ( $group['options'] as $option_key => &$option ) {
+                // Divi prefixes standard meta keys with 'custom_meta_'.
+                if ( strpos( $option_key, 'custom_meta_' ) !== 0 ) {
+                    continue;
+                }
+                $meta_key = substr( $option_key, strlen( 'custom_meta_' ) );
+                if ( isset( $labels[ $meta_key ] ) ) {
+                    if ( is_array( $option ) ) {
+                        $option['label'] = $labels[ $meta_key ];
+                    } else {
+                        $option = [ 'label' => $labels[ $meta_key ] ];
+                    }
+                }
+            }
+            unset( $option );
+        }
+        unset( $group );
+
+        return $options;
+    }
+
+    private static function meta_field_labels() {
+        return [
+            'pn_dl_mac_version'       => 'PN Download: macOS Version',
+            'pn_dl_mac_version_exact' => 'PN Download: macOS Version (Exact Build)',
+            'pn_dl_mac_url'           => 'PN Download: macOS Installer URL',
+            'pn_dl_win_version'       => 'PN Download: Windows Version',
+            'pn_dl_win_version_exact' => 'PN Download: Windows Version (Exact Build)',
+            'pn_dl_win_url'           => 'PN Download: Windows Installer URL',
+            'pn_dl_mac_count'         => 'PN Download: macOS Download Count',
+            'pn_dl_win_count'         => 'PN Download: Windows Download Count',
+        ];
+    }
+
+    /**
+     * One-time rename of legacy underscore-prefixed meta keys to their
+     * unprefixed equivalents so Divi 5's Dynamic Content picker can see them.
+     */
+    public static function maybe_migrate_meta_keys() {
+        if ( get_option( 'pn_downloads_meta_migrated_v2' ) ) {
+            return;
+        }
+
+        global $wpdb;
+        $map = [
+            '_pn_dl_mac_version'       => 'pn_dl_mac_version',
+            '_pn_dl_mac_version_exact' => 'pn_dl_mac_version_exact',
+            '_pn_dl_mac_url'           => 'pn_dl_mac_url',
+            '_pn_dl_win_version'       => 'pn_dl_win_version',
+            '_pn_dl_win_version_exact' => 'pn_dl_win_version_exact',
+            '_pn_dl_win_url'           => 'pn_dl_win_url',
+            '_pn_dl_legacy'            => 'pn_dl_legacy',
+            '_pn_dl_mac_count'         => 'pn_dl_mac_count',
+            '_pn_dl_win_count'         => 'pn_dl_win_count',
+        ];
+        foreach ( $map as $old => $new ) {
+            $wpdb->update( $wpdb->postmeta, [ 'meta_key' => $new ], [ 'meta_key' => $old ] );
+        }
+
+        update_option( 'pn_downloads_meta_migrated_v2', 1 );
     }
 
     public static function register_post_type() {
@@ -51,11 +118,7 @@ class PN_Downloads_CPT {
             'rewrite'      => [ 'slug' => 'pn-downloads' ],
         ] );
 
-        $meta_fields = [
-            '_pn_dl_mac_version', '_pn_dl_mac_version_exact', '_pn_dl_mac_url',
-            '_pn_dl_win_version', '_pn_dl_win_version_exact', '_pn_dl_win_url',
-        ];
-        foreach ( $meta_fields as $key ) {
+        foreach ( array_keys( self::meta_field_labels() ) as $key ) {
             register_post_meta( 'pn_download', $key, [
                 'show_in_rest' => true,
                 'single'       => true,
@@ -78,15 +141,15 @@ class PN_Downloads_CPT {
     public static function render_meta_box( $post ) {
         wp_nonce_field( 'pn_download_save', 'pn_download_nonce' );
 
-        $mac_version       = get_post_meta( $post->ID, '_pn_dl_mac_version', true );
-        $mac_version_exact = get_post_meta( $post->ID, '_pn_dl_mac_version_exact', true );
-        $mac_url           = get_post_meta( $post->ID, '_pn_dl_mac_url', true );
-        $win_version       = get_post_meta( $post->ID, '_pn_dl_win_version', true );
-        $win_version_exact = get_post_meta( $post->ID, '_pn_dl_win_version_exact', true );
-        $win_url           = get_post_meta( $post->ID, '_pn_dl_win_url', true );
-        $legacy            = get_post_meta( $post->ID, '_pn_dl_legacy', true );
-        $mac_count         = (int) get_post_meta( $post->ID, '_pn_dl_mac_count', true );
-        $win_count         = (int) get_post_meta( $post->ID, '_pn_dl_win_count', true );
+        $mac_version       = get_post_meta( $post->ID, 'pn_dl_mac_version', true );
+        $mac_version_exact = get_post_meta( $post->ID, 'pn_dl_mac_version_exact', true );
+        $mac_url           = get_post_meta( $post->ID, 'pn_dl_mac_url', true );
+        $win_version       = get_post_meta( $post->ID, 'pn_dl_win_version', true );
+        $win_version_exact = get_post_meta( $post->ID, 'pn_dl_win_version_exact', true );
+        $win_url           = get_post_meta( $post->ID, 'pn_dl_win_url', true );
+        $legacy            = get_post_meta( $post->ID, 'pn_dl_legacy', true );
+        $mac_count         = (int) get_post_meta( $post->ID, 'pn_dl_mac_count', true );
+        $win_count         = (int) get_post_meta( $post->ID, 'pn_dl_win_count', true );
 
         if ( ! is_array( $legacy ) ) {
             $legacy = [];
@@ -199,14 +262,14 @@ class PN_Downloads_CPT {
         $text_fields = [ 'pn_dl_mac_version', 'pn_dl_mac_version_exact', 'pn_dl_win_version', 'pn_dl_win_version_exact' ];
         foreach ( $text_fields as $field ) {
             if ( isset( $_POST[ $field ] ) ) {
-                update_post_meta( $post_id, '_' . $field, sanitize_text_field( $_POST[ $field ] ) );
+                update_post_meta( $post_id, $field, sanitize_text_field( $_POST[ $field ] ) );
             }
         }
 
         $url_fields = [ 'pn_dl_mac_url', 'pn_dl_win_url' ];
         foreach ( $url_fields as $field ) {
             if ( isset( $_POST[ $field ] ) ) {
-                update_post_meta( $post_id, '_' . $field, esc_url_raw( $_POST[ $field ] ) );
+                update_post_meta( $post_id, $field, esc_url_raw( $_POST[ $field ] ) );
             }
         }
 
@@ -224,7 +287,7 @@ class PN_Downloads_CPT {
                 ];
             }
         }
-        update_post_meta( $post_id, '_pn_dl_legacy', $legacy );
+        update_post_meta( $post_id, 'pn_dl_legacy', $legacy );
     }
 
     public static function admin_columns( $columns ) {
@@ -244,25 +307,25 @@ class PN_Downloads_CPT {
         switch ( $column ) {
             case 'pn_version':
                 $parts = [];
-                $mac_v = get_post_meta( $post_id, '_pn_dl_mac_version', true );
-                $win_v = get_post_meta( $post_id, '_pn_dl_win_version', true );
+                $mac_v = get_post_meta( $post_id, 'pn_dl_mac_version', true );
+                $win_v = get_post_meta( $post_id, 'pn_dl_win_version', true );
                 if ( $mac_v ) { $parts[] = 'Mac: ' . $mac_v; }
                 if ( $win_v ) { $parts[] = 'Win: ' . $win_v; }
                 echo esc_html( implode( ' | ', $parts ) ?: '—' );
                 break;
             case 'pn_platforms':
                 $platforms = [];
-                if ( get_post_meta( $post_id, '_pn_dl_mac_url', true ) ) {
+                if ( get_post_meta( $post_id, 'pn_dl_mac_url', true ) ) {
                     $platforms[] = 'macOS';
                 }
-                if ( get_post_meta( $post_id, '_pn_dl_win_url', true ) ) {
+                if ( get_post_meta( $post_id, 'pn_dl_win_url', true ) ) {
                     $platforms[] = 'Windows';
                 }
                 echo esc_html( implode( ', ', $platforms ) ?: '—' );
                 break;
             case 'pn_downloads':
-                $mac = (int) get_post_meta( $post_id, '_pn_dl_mac_count', true );
-                $win = (int) get_post_meta( $post_id, '_pn_dl_win_count', true );
+                $mac = (int) get_post_meta( $post_id, 'pn_dl_mac_count', true );
+                $win = (int) get_post_meta( $post_id, 'pn_dl_win_count', true );
                 $parts = [];
                 if ( $mac ) {
                     $parts[] = 'Mac: ' . number_format( $mac );

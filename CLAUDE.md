@@ -14,15 +14,15 @@ Version and URL fields are per-platform so Mac and Windows can be updated indepe
 
 | Key | Purpose |
 |---|---|
-| `_pn_dl_mac_version` | macOS display version (e.g. 3.2.1) |
-| `_pn_dl_mac_version_exact` | macOS exact build version (e.g. 3.2.1.18) |
-| `_pn_dl_mac_url` | macOS installer URL |
-| `_pn_dl_win_version` | Windows display version (e.g. 3.2.1) |
-| `_pn_dl_win_version_exact` | Windows exact build version (e.g. 3.2.1.18) |
-| `_pn_dl_win_url` | Windows installer URL |
-| `_pn_dl_legacy` | Serialized array of legacy versions `[{mac_version, mac_version_exact, mac_url, win_version, win_version_exact, win_url}]` |
-| `_pn_dl_mac_count` | macOS download count |
-| `_pn_dl_win_count` | Windows download count |
+| `pn_dl_mac_version` | macOS display version (e.g. 3.2.1) |
+| `pn_dl_mac_version_exact` | macOS exact build version (e.g. 3.2.1.18) |
+| `pn_dl_mac_url` | macOS installer URL |
+| `pn_dl_win_version` | Windows display version (e.g. 3.2.1) |
+| `pn_dl_win_version_exact` | Windows exact build version (e.g. 3.2.1.18) |
+| `pn_dl_win_url` | Windows installer URL |
+| `pn_dl_legacy` | Serialized array of legacy versions `[{mac_version, mac_version_exact, mac_url, win_version, win_version_exact, win_url}]` |
+| `pn_dl_mac_count` | macOS download count |
+| `pn_dl_win_count` | Windows download count |
 
 ## REST API Endpoints
 

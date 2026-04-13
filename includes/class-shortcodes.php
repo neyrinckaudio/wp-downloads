@@ -22,7 +22,7 @@ class PN_Downloads_Shortcodes {
             return '';
         }
         $platform = in_array( $atts['platform'], [ 'mac', 'win' ], true ) ? $atts['platform'] : 'mac';
-        return esc_html( get_post_meta( $post->ID, "_pn_dl_{$platform}_version", true ) );
+        return esc_html( get_post_meta( $post->ID, "pn_dl_{$platform}_version", true ) );
     }
 
     /**
@@ -36,7 +36,7 @@ class PN_Downloads_Shortcodes {
             return '';
         }
         $platform = in_array( $atts['platform'], [ 'mac', 'win' ], true ) ? $atts['platform'] : 'mac';
-        return esc_html( get_post_meta( $post->ID, "_pn_dl_{$platform}_version_exact", true ) );
+        return esc_html( get_post_meta( $post->ID, "pn_dl_{$platform}_version_exact", true ) );
     }
 
     /**
